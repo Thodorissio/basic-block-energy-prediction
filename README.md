@@ -8,6 +8,7 @@ Here will be uploaded the conda environment instalation
 
 # To do
 
+* Check if embeddings can be represented in a cosine space so as to fully utilize cosine simil metric
 * Run more tests with palm-tree tool
 * Create ml-pipeline for embeddings to be trained when the dataset comes
 
