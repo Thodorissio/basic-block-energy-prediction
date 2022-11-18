@@ -1,3 +1,5 @@
 __pycache__
 
 test_model
+dataset/imdb/IMDB Dataset.csv
+dataset/imdb/IMDB_Dataset.pkl

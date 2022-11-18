@@ -11,7 +11,10 @@ import eval_utils as utils
 
 def encode(text: List[str]) -> np.ndarray:
 
-    palmtree = utils.UsableTransformer(model_path=f"{palmtree_path}/palmtree/transformer.ep19", vocab_path=f"{palmtree_path}/palmtree/vocab")
+    palmtree = utils.UsableTransformer(
+        model_path=f"{palmtree_path}/palmtree/transformer.ep19",
+        vocab_path=f"{palmtree_path}/palmtree/vocab",
+    )
     embeddings = palmtree.encode(text)
 
     return embeddings
