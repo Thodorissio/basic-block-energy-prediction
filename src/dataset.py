@@ -4,10 +4,10 @@ import torch
 from torch.utils import data
 
 
-class IMDB_Dataset(data.Dataset):
+class EnergyPredictionDataset(data.Dataset):
     def __init__(self, data_df: pd.DataFrame):
         super().__init__()
-        x = data_df.sentence_emb.values
+        x = data_df.embeddings.values
         y = data_df.energy.values
         self.x_train = list(map(lambda x: torch.tensor(x), x))
         self.y_train = list(map(lambda y: torch.tensor(y), y))
