@@ -4,13 +4,18 @@ This is my thesis repo. It aims to predict the energy that a basic block of code
 
 # Basic Dependencies
 
-Here will be uploaded the conda environment instalation
+environment.yml will be uploaded as soon as the major developement has been completed
+
+```
+cd code-energy-prediction
+conda env create -f environment.yml
+conda activate energy-prediction
+```
 
 # To do
 
-* Check if embeddings can be represented in a cosine space so as to fully utilize cosine simil metric
-* Run more tests with palm-tree tool
-* Create ml-pipeline for embeddings to be trained when the dataset comes
+* Fix pipeline bug for sentiment analysis
+* Test pipeline with basic block data and random sample energy labels
 
 # Contributors
 
