@@ -1,14 +1,19 @@
 import pandas as pd
+import numpy as np
 
 import torch
 from torch.utils import data
 
 
 class EnergyPredictionDataset(data.Dataset):
-    def __init__(self, data_df: pd.DataFrame):
+    def __init__(self, data_df: pd.DataFrame, mean: bool = False):
         super().__init__()
-        x = data_df.embeddings.values
-        y = data_df.energy.values
+
+        if mean:
+            x = data_df.bb_embeddings.apply(lambda x: np.mean(x, axis=0)).values
+        else:
+            x = data_df.bb_embeddings.values
+        y = data_df.energy_labels.values
         self.x_train = list(map(lambda x: torch.tensor(x), x))
         self.y_train = list(map(lambda y: torch.tensor(y), y))
 
