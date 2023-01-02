@@ -13,7 +13,7 @@ class EnergyPredictionDataset(data.Dataset):
             x = data_df.bb_embeddings.apply(lambda x: np.mean(x, axis=0)).values
         else:
             x = data_df.bb_embeddings.values
-        y = data_df.energy_labels.values
+        y = data_df.energy.values
         self.x_train = list(map(lambda x: torch.tensor(x), x))
         self.y_train = list(map(lambda y: torch.tensor(y), y))
 

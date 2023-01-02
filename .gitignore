@@ -1,7 +1,4 @@
 __pycache__
 
 test_model
-dataset/imdb/IMDB Dataset.csv
-dataset/imdb/IMDB_Dataset.pkl
-dataset/sample_bb_data/sample_basic_blocks.txt
-dataset/sample_bb_data/TEST_BB_Dataset.pkl
+dataset/
