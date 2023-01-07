@@ -14,8 +14,8 @@ conda activate energy-prediction
 
 # To do
 
-* Fix pipeline bug for sentiment analysis
-* Test pipeline with basic block data and random sample energy labels
+* Setup optuna for experiments
+* Improve models
 
 # Contributors
 
