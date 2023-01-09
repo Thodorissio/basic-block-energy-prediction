@@ -53,6 +53,22 @@ def remove_addresses(bb: list[str]) -> list[str]:
     return clean_bb
 
 
+def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 10) -> list:
+
+    encoded_bb = []
+    for inst in bb[:max_insts]:
+
+        if inst in vocab.keys():
+            encoded_bb.append(vocab[inst])
+        else:
+            encoded_bb.append(vocab["UNK"])
+
+    if len(encoded_bb) < max_insts:
+        encoded_bb.extend([vocab["PAD"] for i in range(len(encoded_bb), max_insts)])
+
+    return encoded_bb
+
+
 def preprocess_bb_df(
     df: pd.DataFrame, max_instructions: int = 20, max_energy: int = 10
 ) -> pd.DataFrame:
