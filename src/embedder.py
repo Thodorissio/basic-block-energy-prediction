@@ -3,10 +3,9 @@ import numpy as np
 from typing import List
 import os
 
-palmtree_path = "C:/Users/thodo/Documents/σχολη/diplomatiki/PalmTree/pre-trained_model"
+palmtree_path = "C:/Users/thodo/Documents/sxoli/diplomatiki/PalmTree/pre-trained-model/pre_trained_model"
 
-sys.path.append(palmtree_path)
-import eval_utils as utils
+from pre_trained_palmtree import eval_utils as utils
 
 
 def encode(text: List[str]) -> np.ndarray:
