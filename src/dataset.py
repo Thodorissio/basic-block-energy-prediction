@@ -25,7 +25,7 @@ class EnergyPredictionDataset(data.Dataset):
 
 
 class EnergyPredictionVocabDataset(data.Dataset):
-    def __init__(self, data_df: pd.DataFrame, mean: bool = False):
+    def __init__(self, data_df: pd.DataFrame):
         super().__init__()
 
         x = np.array(data_df.encoded_bb.tolist())
