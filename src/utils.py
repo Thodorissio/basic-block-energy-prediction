@@ -4,8 +4,11 @@ import pandas as pd
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import DataLoader
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
+
+import dataset
 
 
 def read_bb_data(bb_path: str, bb_energy_path: str) -> pd.DataFrame:
@@ -53,7 +56,7 @@ def remove_addresses(bb: list[str]) -> list[str]:
     return clean_bb
 
 
-def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 10) -> list:
+def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 20) -> list:
 
     encoded_bb = []
     for inst in bb[:max_insts]:
@@ -64,7 +67,7 @@ def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 10) -> lis
             encoded_bb.append(vocab["UNK"])
 
     if len(encoded_bb) < max_insts:
-        encoded_bb.extend([vocab["PAD"] for i in range(len(encoded_bb), max_insts)])
+        encoded_bb.extend([vocab["PAD"] for _ in range(len(encoded_bb), max_insts)])
 
     return encoded_bb
 
@@ -76,20 +79,23 @@ def preprocess_bb_df(
     if "bb_name" in df.columns:
         clean_df = df.drop(columns=["bb_name"])
 
-    clean_df = clean_df[clean_df.bb.apply(lambda x: len(x)) <= max_instructions]
-    clean_df = clean_df.reset_index(drop=True)
+    # cut all instructions above max_instructions for each bb
+    clean_df["bb"] = clean_df.bb.apply(lambda x: x[:max_instructions])
+    # remove address constants
+    clean_df["bb"] = clean_df.bb.map(remove_addresses)
 
+    # Remove bbs with outlier energy
     clean_df = clean_df[clean_df.energy > 0.0]
     clean_df = clean_df[clean_df.energy <= max_energy]
 
-    clean_df.bb = clean_df.bb.map(remove_addresses)
+    clean_df = clean_df.reset_index(drop=True)
 
     return clean_df
 
 
-def collate_fn(
+def pad_collate_fn(
     data: List[Tuple[torch.Tensor, torch.Tensor]],
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> Tuple[torch.Tensor, torch.Tensor]:
 
     """Custom collate function that pads uneven sequenses
 
@@ -102,11 +108,96 @@ def collate_fn(
 
     data.sort(key=lambda x: x[0].shape[0], reverse=True)
     sequences, label = zip(*data)
-    lengths = [len(seq) for seq in sequences]
+    # lengths = [len(seq) for seq in sequences]
     padded_seq = pad_sequence(sequences, batch_first=True, padding_value=0)
 
     return (
         padded_seq,
-        torch.from_numpy(np.array(lengths)),
+        # torch.from_numpy(np.array(lengths)),
         torch.from_numpy(np.array(label)),
     )
+
+
+def get_palmtree_data_dict(
+    data_df: pd.DataFrame,
+    split: float = 0.9,
+    mean: bool = False,
+    batch_size: int = 32,
+    random_state: Optional[int] = None,
+) -> dict:
+
+    split = 0.9
+    data_df = data_df.sample(frac=1, random_state=random_state).reset_index(drop=True)
+    bb_df_train = data_df[: int(split * len(data_df))]
+    bb_df_val = data_df[int(split * len(data_df)) :]
+
+    train_data = dataset.EnergyPredictionDataset(bb_df_train, mean=mean)
+    if mean:
+        train_loader = DataLoader(
+            train_data, batch_size=batch_size, shuffle=False, drop_last=True
+        )
+    else:
+        train_loader = DataLoader(
+            train_data,
+            batch_size=batch_size,
+            shuffle=False,
+            drop_last=True,
+            collate_fn=pad_collate_fn,
+        )
+
+    val_data = dataset.EnergyPredictionDataset(bb_df_val, mean=mean)
+    if mean:
+        val_loader = DataLoader(
+            val_data, batch_size=batch_size, shuffle=False, drop_last=True
+        )
+    else:
+        val_loader = DataLoader(
+            val_data,
+            batch_size=batch_size,
+            shuffle=False,
+            drop_last=True,
+            collate_fn=pad_collate_fn,
+        )
+
+    data_loaders = {
+        "train_loader": train_loader,
+        "val_loader": val_loader,
+    }
+
+    return data_loaders
+
+
+def get_vocab_data_dict(
+    data_df: pd.DataFrame,
+    split: float = 0.9,
+    batch_size: int = 32,
+    random_state: Optional[int] = None,
+) -> dict:
+
+    split = 0.9
+    data_df = data_df.sample(frac=1, random_state=random_state).reset_index(drop=True)
+    bb_df_train = data_df[: int(split * len(data_df))]
+    bb_df_val = data_df[int(split * len(data_df)) :]
+
+    train_data = dataset.EnergyPredictionVocabDataset(bb_df_train)
+    train_loader = DataLoader(
+        train_data,
+        batch_size=batch_size,
+        shuffle=False,
+        drop_last=True,
+    )
+
+    val_data = dataset.EnergyPredictionVocabDataset(bb_df_val)
+    val_loader = DataLoader(
+        val_data,
+        batch_size=batch_size,
+        shuffle=False,
+        drop_last=True,
+    )
+
+    data_loaders = {
+        "train_loader": train_loader,
+        "val_loader": val_loader,
+    }
+
+    return data_loaders

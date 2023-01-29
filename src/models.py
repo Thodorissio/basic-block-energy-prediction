@@ -23,6 +23,8 @@ class LSTM_Regressor(nn.Module):
 
         self.custom = custom_embs
         if self.custom:
+            if vocab_size is None:
+                raise ValueError("Should provide 'vocab_size' for custom embeddings")
             self.embedding = nn.Embedding(vocab_size, embedding_size)
 
         self.num_layers = num_layers
@@ -75,12 +77,6 @@ class LSTM_Regressor(nn.Module):
 
         return hidden
 
-    def train(self) -> dict:
-        return
-
-    def predict(self) -> None:
-        return
-
 
 class Simple_Regressor(nn.Module):
     def __init__(
@@ -117,9 +113,3 @@ class Simple_Regressor(nn.Module):
         out = self.regressor(x)
 
         return out
-
-    def train(self) -> dict:
-        return
-
-    def predict(self) -> dict:
-        return
