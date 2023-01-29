@@ -21,8 +21,10 @@ conda activate energy-prediction
 
 # To do
 
-* Setup optuna for experiments
-* Improve models
+* Run final optuna studies for models and regressors
+* Clean Regressors code
+* Create predict function that takes bb as argument
+* Make repo into module
 
 # Contributors
 
