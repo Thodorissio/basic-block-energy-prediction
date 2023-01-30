@@ -66,8 +66,8 @@ def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 20) -> lis
         else:
             encoded_bb.append(vocab["UNK"])
 
-    if len(encoded_bb) < max_insts:
-        encoded_bb.extend([vocab["PAD"] for _ in range(len(encoded_bb), max_insts)])
+    """if len(encoded_bb) < max_insts:
+        encoded_bb.extend([vocab["PAD"] for _ in range(len(encoded_bb), max_insts)])"""
 
     return encoded_bb
 
@@ -185,6 +185,7 @@ def get_vocab_data_dict(
         batch_size=batch_size,
         shuffle=False,
         drop_last=True,
+        collate_fn=pad_collate_fn,
     )
 
     val_data = dataset.EnergyPredictionVocabDataset(bb_df_val)
@@ -193,6 +194,7 @@ def get_vocab_data_dict(
         batch_size=batch_size,
         shuffle=False,
         drop_last=True,
+        collate_fn=pad_collate_fn,
     )
 
     data_loaders = {

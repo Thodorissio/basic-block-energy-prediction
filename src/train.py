@@ -142,15 +142,15 @@ def train_model(
     return model_training
 
 
-def predict(
+def evaluate(
     model: Union[LSTM_Regressor, Simple_Regressor],
-    test_loader: DataLoader,
+    val_loader: DataLoader,
 ) -> dict[str, np.ndarray]:
     """get model predictions
 
     Args:
         model (Union): model
-        test_loader (DataLoader): test_loader
+        val_loader (DataLoader): val_loader
 
     Returns:
         dict[str, np.ndarray]: preds, true energies
@@ -167,7 +167,7 @@ def predict(
     if lstm_model:
         hidden_state = model.init_hidden(128)
 
-    for features, labels in test_loader:
+    for features, labels in val_loader:
 
         features, labels = features.cuda(), labels.cuda()
         if lstm_model:
@@ -184,3 +184,10 @@ def predict(
     preds_dict = {"preds": preds, "true_energies": true_energies}
 
     return preds_dict
+
+
+def predict(
+    model: Union[LSTM_Regressor, Simple_Regressor], test_bbs: Union[list, list[list]]
+) -> np.ndarray:
+
+    return patata
