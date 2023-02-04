@@ -28,7 +28,7 @@ class EnergyPredictionVocabDataset(data.Dataset):
     def __init__(self, data_df: pd.DataFrame):
         super().__init__()
 
-        x = np.array(data_df.encoded_bb.tolist())
+        x = np.array(data_df.encoded_bb.tolist(), dtype=object)
         y = data_df.energy.values
         self.x_train = list(map(lambda x: torch.tensor(x), x))
         self.y_train = list(map(lambda y: torch.tensor(y), y))

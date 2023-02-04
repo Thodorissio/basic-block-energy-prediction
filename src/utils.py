@@ -108,12 +108,10 @@ def pad_collate_fn(
 
     data.sort(key=lambda x: x[0].shape[0], reverse=True)
     sequences, label = zip(*data)
-    # lengths = [len(seq) for seq in sequences]
     padded_seq = pad_sequence(sequences, batch_first=True, padding_value=0)
 
     return (
         padded_seq,
-        # torch.from_numpy(np.array(lengths)),
         torch.from_numpy(np.array(label)),
     )
 
