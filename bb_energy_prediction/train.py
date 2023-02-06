@@ -6,10 +6,10 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 
 from typing import Union, Optional
-from models import LSTM_Regressor, Simple_Regressor
+from .models import LSTM_Regressor, Simple_Regressor
 
-from utils import remove_addresses, encode_bb_from_vocab
-from embedder import encode
+from .data_utils import remove_addresses, encode_bb_from_vocab
+from .embedder import encode
 
 
 class EarlyStopper:

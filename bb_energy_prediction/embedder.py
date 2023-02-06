@@ -1,7 +1,9 @@
-import sys
 import numpy as np
-from typing import List
 import os
+from typing import List
+from dotenv import load_dotenv
+
+load_dotenv()
 
 palmtree_path = os.getenv("PALMTREE_PATH")
 

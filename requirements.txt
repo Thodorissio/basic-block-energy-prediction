@@ -1,0 +1,12 @@
+--extra-index-url https://download.pytorch.org/whl/cu117
+torch==1.13.1
+torchaudio
+torchvision
+torchtext
+python-dotenv==0.21.1
+optuna==3.0.5
+optuna-dashboard==0.8.1
+pandas==1.5.0
+numpy==1.23.3
+tqdm==4.64.1
+scikit-learn==1.1.2

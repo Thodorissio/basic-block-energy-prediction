@@ -1,7 +1,8 @@
 __pycache__
+bb_energy_prediction.egg-info
 
 test_model
-dataset/
+energy_data/
 model_checkpoints/
 test.*
 

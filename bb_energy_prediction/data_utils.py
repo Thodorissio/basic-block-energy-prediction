@@ -1,14 +1,62 @@
 import tqdm
+import os
 import numpy as np
 import pandas as pd
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
 
-from typing import List, Tuple, Optional
+from collections import Counter
+from typing import List, Tuple, Optional, Literal
 
-import dataset
+from . import dataset, embedder
+
+EncTypes = Literal["palmtree", "vocab"]
+
+
+def create_data_df(data_path: str) -> pd.DataFrame:
+    """Create data based on custom dataset and save it in data path"""
+
+    energy_data_dir = os.getenv("ENERGY_DATASET_PATH")
+    result_files = [f for f in os.listdir(energy_data_dir) if f.endswith("results")]
+    data_df = pd.DataFrame()
+
+    for file in result_files:
+        file_df = read_bb_data(
+            f"{energy_data_dir}/{file}/breaker_code.txt",
+            f"{energy_data_dir}/{file}/breaker_final_energy.txt",
+        )
+        file_df = preprocess_bb_df(file_df)
+        file_df["program_name"] = file
+        data_df = pd.concat([data_df, file_df], ignore_index=True)
+
+    data_df["bb_embeddings"] = data_df.bb.apply(lambda x: embedder.encode(x))
+    data_df.to_pickle(data_path)
+
+    return data_df
+
+
+def get_data_df(data_path: str) -> pd.DataFrame:
+    """Get dataframe containing: bb, labels, bb's program name, bb embedding"""
+
+    data_dir = data_path.rsplit("/", 1)[0]
+    data_file = data_path.split("/")[-1]
+
+    if not os.path.exists(data_dir):
+        print("Given data directory does not exist. Creating new directory.")
+        os.makedirs(data_dir)
+
+    if data_file in os.listdir(data_dir):
+        data_df = pd.read_pickle(data_path)
+    else:
+        print("Data file does not exist. Creating new data file.")
+        data_df = create_data_df(data_path)
+
+    return data_df
 
 
 def read_bb_data(bb_path: str, bb_energy_path: str) -> pd.DataFrame:
@@ -56,6 +104,18 @@ def remove_addresses(bb: list[str]) -> list[str]:
     return clean_bb
 
 
+def get_inst_vocab(data_df: pd.DataFrame) -> dict:
+    """Creates instruction vocabulary based on bbs of data_df"""
+
+    counts = Counter(inst for bb in data_df.bb.tolist() for inst in set(bb))
+
+    vocab = {inst: i for i, (inst, _) in enumerate(counts.most_common(20000), start=2)}
+    vocab["PAD"] = 0
+    vocab["UNK"] = 1
+
+    return vocab
+
+
 def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 20) -> list:
 
     encoded_bb = []
@@ -65,9 +125,6 @@ def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 20) -> lis
             encoded_bb.append(vocab[inst])
         else:
             encoded_bb.append(vocab["UNK"])
-
-    """if len(encoded_bb) < max_insts:
-        encoded_bb.extend([vocab["PAD"] for _ in range(len(encoded_bb), max_insts)])"""
 
     return encoded_bb
 
@@ -116,8 +173,9 @@ def pad_collate_fn(
     )
 
 
-def get_palmtree_data_dict(
+def get_data_dict(
     data_df: pd.DataFrame,
+    enc_type: EncTypes,
     split: float = 0.9,
     mean: bool = False,
     batch_size: int = 32,
@@ -129,10 +187,16 @@ def get_palmtree_data_dict(
     bb_df_train = data_df[: int(split * len(data_df))]
     bb_df_val = data_df[int(split * len(data_df)) :]
 
-    train_data = dataset.EnergyPredictionDataset(bb_df_train, mean=mean)
-    if mean:
+    train_data = dataset.EnergyPredictionDataset(
+        bb_df_train, enc_type=enc_type, mean=mean
+    )
+    val_data = dataset.EnergyPredictionDataset(bb_df_val, enc_type=enc_type, mean=mean)
+    if mean and enc_type == "palmtree":
         train_loader = DataLoader(
             train_data, batch_size=batch_size, shuffle=False, drop_last=True
+        )
+        val_loader = DataLoader(
+            val_data, batch_size=batch_size, shuffle=False, drop_last=True
         )
     else:
         train_loader = DataLoader(
@@ -142,13 +206,6 @@ def get_palmtree_data_dict(
             drop_last=True,
             collate_fn=pad_collate_fn,
         )
-
-    val_data = dataset.EnergyPredictionDataset(bb_df_val, mean=mean)
-    if mean:
-        val_loader = DataLoader(
-            val_data, batch_size=batch_size, shuffle=False, drop_last=True
-        )
-    else:
         val_loader = DataLoader(
             val_data,
             batch_size=batch_size,
@@ -156,44 +213,6 @@ def get_palmtree_data_dict(
             drop_last=True,
             collate_fn=pad_collate_fn,
         )
-
-    data_loaders = {
-        "train_loader": train_loader,
-        "val_loader": val_loader,
-    }
-
-    return data_loaders
-
-
-def get_vocab_data_dict(
-    data_df: pd.DataFrame,
-    split: float = 0.9,
-    batch_size: int = 32,
-    random_state: Optional[int] = None,
-) -> dict:
-
-    split = 0.9
-    data_df = data_df.sample(frac=1, random_state=random_state).reset_index(drop=True)
-    bb_df_train = data_df[: int(split * len(data_df))]
-    bb_df_val = data_df[int(split * len(data_df)) :]
-
-    train_data = dataset.EnergyPredictionVocabDataset(bb_df_train)
-    train_loader = DataLoader(
-        train_data,
-        batch_size=batch_size,
-        shuffle=False,
-        drop_last=True,
-        collate_fn=pad_collate_fn,
-    )
-
-    val_data = dataset.EnergyPredictionVocabDataset(bb_df_val)
-    val_loader = DataLoader(
-        val_data,
-        batch_size=batch_size,
-        shuffle=False,
-        drop_last=True,
-        collate_fn=pad_collate_fn,
-    )
 
     data_loaders = {
         "train_loader": train_loader,
