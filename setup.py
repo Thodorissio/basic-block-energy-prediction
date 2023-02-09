@@ -8,7 +8,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "torch>=1.13.0+cu117,<1.14.0",
-        "optuna>=3.0.0,<3.1.0",
+        "optuna>=3.1.0,<3.2.0",
         "optuna-dashboard>=0.8.0,<0.9.0",
         "pandas>=1.5.0,<1.6.0",
         "numpy>=1.23.0,<1.24.0",
