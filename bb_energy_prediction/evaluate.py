@@ -55,41 +55,42 @@ def evaluate(
 
 def predict(
     model: Union[LSTM_Regressor, Simple_Regressor],
-    test_bbs: Union[list, list[list]],
+    test_bbs: list,
     vocab: Optional[dict] = None,
 ) -> np.ndarray:
     """get test bbs energy predictions given a model
 
     Args:
         model (Union[LSTM_Regressor, Simple_Regressor]): model
-        test_bbs (Union[list, list[list]]): test bbs
+        test_bbs (Union[list, list[list]]): test bbs or test bbs embeddings in the palmtree scenario
         vocab (Optional[dict], optional): vocab used for custom embs model. Defaults to None.
 
     Returns:
         np.ndarray: energy predictions
     """
 
-    processed_bbs = [remove_addresses(bb) for bb in test_bbs]
-
-    if model.custom:
+    if isinstance(model, LSTM_Regressor) and model.custom:
+        processed_bbs = [remove_addresses(bb) for bb in test_bbs]
         if vocab is None:
             raise ValueError(
                 "When using model with custom embeddings you should also provide not None vocab."
             )
         encoded_bbs = [encode_bb_from_vocab(bb, vocab) for bb in processed_bbs]
     else:
-        encoded_bbs = [encode(bb) for bb in processed_bbs]
-
-    encoded_bbs = list(map(lambda x: torch.tensor(x).cuda(), encoded_bbs))
+        encoded_bbs = test_bbs.copy()
 
     if isinstance(model, LSTM_Regressor):
+        encoded_bbs = list(map(lambda x: torch.tensor(x).cuda(), encoded_bbs))
         padded_seq = pad_sequence(encoded_bbs, batch_first=True, padding_value=0)
         hidden_state = model.init_hidden(len(test_bbs))
         preds, _ = model(padded_seq, hidden_state)
     else:
-        mean_encoded_bbs = [np.mean(bb, axis=0) for bb in encoded_bbs]
-        preds = model(mean_encoded_bbs)
+        encoded_bbs = np.array(
+            [np.mean(bb, axis=0, dtype=np.float32) for bb in encoded_bbs]
+        )
+        encoded_bbs = torch.tensor(encoded_bbs).cuda()
+        preds = model(encoded_bbs)
 
-    preds = np.array(preds.cpu())
+    preds = np.array([pred.cpu().detach().numpy() for pred in preds])
 
     return preds
