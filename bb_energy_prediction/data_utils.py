@@ -31,7 +31,7 @@ def create_data_df(data_path: str) -> pd.DataFrame:
             f"{energy_data_dir}/{file}/breaker_final_energy.txt",
         )
         file_df = preprocess_bb_df(file_df)
-        file_df["program_name"] = file
+        file_df["program_name"] = file.rsplit("_results", 1)[0]
         data_df = pd.concat([data_df, file_df], ignore_index=True)
 
     data_df["bb_embeddings"] = data_df.bb.apply(lambda x: embedder.encode(x))
@@ -94,7 +94,6 @@ def read_bb_data(bb_path: str, bb_energy_path: str) -> pd.DataFrame:
 
 
 def remove_addresses(bb: list[str]) -> list[str]:
-
     clean_bb = []
     for inst in bb:
         inst_list = inst.split()
@@ -117,10 +116,8 @@ def get_inst_vocab(data_df: pd.DataFrame) -> dict:
 
 
 def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 20) -> list:
-
     encoded_bb = []
     for inst in bb[:max_insts]:
-
         if inst in vocab.keys():
             encoded_bb.append(vocab[inst])
         else:
@@ -132,7 +129,6 @@ def encode_bb_from_vocab(bb: list[str], vocab: dict, max_insts: int = 20) -> lis
 def preprocess_bb_df(
     df: pd.DataFrame, max_instructions: int = 20, max_energy: int = 10
 ) -> pd.DataFrame:
-
     if "bb_name" in df.columns:
         clean_df = df.drop(columns=["bb_name"])
 
@@ -153,7 +149,6 @@ def preprocess_bb_df(
 def pad_collate_fn(
     data: List[Tuple[torch.Tensor, torch.Tensor]],
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-
     """Custom collate function that pads uneven sequenses
 
     Args:
@@ -181,7 +176,6 @@ def get_data_dict(
     batch_size: int = 32,
     random_state: Optional[int] = None,
 ) -> dict:
-
     split = 0.9
     data_df = data_df.sample(frac=1, random_state=random_state).reset_index(drop=True)
     bb_df_train = data_df[: int(split * len(data_df))]

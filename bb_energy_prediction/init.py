@@ -16,3 +16,4 @@ from .data_utils import (
     pad_collate_fn,
     get_data_dict,
 )
+from .sklearn_regressors import evaluate_regressor

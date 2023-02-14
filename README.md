@@ -25,10 +25,8 @@ pip install .
 
 # To do
 
-* Run final optuna studies for models and regressors
-* Clean Regressors code
-* Create predict function that takes bb as argument
-* Make repo into module
+* Gather all results in a notebook
+* Make demo notebook and clean the other notebooks
 
 # Contributors
 
