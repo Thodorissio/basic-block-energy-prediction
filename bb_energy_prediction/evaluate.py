@@ -79,17 +79,23 @@ def predict(
     else:
         encoded_bbs = test_bbs.copy()
 
+    batch_size = 256
+
     if isinstance(model, LSTM_Regressor):
-        encoded_bbs = list(map(lambda x: torch.tensor(x).cuda(), encoded_bbs))
-        padded_seq = pad_sequence(encoded_bbs, batch_first=True, padding_value=0)
-        hidden_state = model.init_hidden(len(test_bbs))
-        preds, _ = model(padded_seq, hidden_state)
+        preds = torch.tensor([]).cuda()
+        for i in range(0, len(encoded_bbs), batch_size):
+            batch_bbs = encoded_bbs[i : (i + batch_size)]
+            batch_bbs = list(map(lambda x: torch.tensor(x).cuda(), batch_bbs))
+            padded_seq = pad_sequence(batch_bbs, batch_first=True, padding_value=0)
+            hidden_state = model.init_hidden(len(batch_bbs))
+            batch_preds, _ = model(padded_seq, hidden_state)
+            preds = torch.cat([preds, batch_preds])
     else:
         encoded_bbs = np.array(
             [np.mean(bb, axis=0, dtype=np.float32) for bb in encoded_bbs]
         )
         encoded_bbs = torch.tensor(encoded_bbs).cuda()
-        preds = model(encoded_bbs)
+        preds = model(encoded_bbs).flatten()
 
     preds = np.array([pred.cpu().detach().numpy() for pred in preds])
 

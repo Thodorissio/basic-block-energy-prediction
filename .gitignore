@@ -1,9 +1,10 @@
 __pycache__
 bb_energy_prediction.egg-info
 
-test_model
 energy_data/
 model_checkpoints/
+results/
+dev_notebooks/
 test.*
 
 .env
