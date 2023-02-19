@@ -48,12 +48,16 @@ class LSTM_Regressor(nn.Module):
         self.smaller_dense_size = nn.Linear(dense_size, smaller_dense_size)
         self.regressor = nn.Linear(smaller_dense_size, 1)
 
-    def forward(self, x, hidden):
-
+    def forward(self, x):
         batch_size = x.size(0)
 
         if self.custom:
             x = self.embedding(x)
+
+        hidden = (
+            torch.zeros((self.num_layers, batch_size, self.hidden_size)).cuda(),
+            torch.zeros((self.num_layers, batch_size, self.hidden_size)).cuda(),
+        )
 
         lstm_out, hidden_state = self.lstm(x, hidden)
         lstm_out = lstm_out.contiguous().view(-1, self.hidden_size)
@@ -66,16 +70,7 @@ class LSTM_Regressor(nn.Module):
         out = out.view(batch_size, -1)
         out = out[:, -1]
 
-        return out, hidden_state
-
-    def init_hidden(self, batch_size):
-
-        hidden = (
-            torch.zeros((self.num_layers, batch_size, self.hidden_size)).cuda(),
-            torch.zeros((self.num_layers, batch_size, self.hidden_size)).cuda(),
-        )
-
-        return hidden
+        return out
 
 
 class Simple_Regressor(nn.Module):
@@ -102,7 +97,6 @@ class Simple_Regressor(nn.Module):
         self.regressor = nn.Linear(layers[-1], 1)
 
     def forward(self, x):
-
         for dense in self.layers_list:
             x = dense(x)
             if dense == self.layers_list[-1]:

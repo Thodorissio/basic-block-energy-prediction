@@ -31,7 +31,6 @@ def train_model(
     train_loader: DataLoader,
     val_loader: DataLoader,
     lr: float = 1e-2,
-    batch_size: int = 32,
     epochs: int = 50,
     verbose: bool = False,
     lr_decay: float = 0.6,
@@ -45,7 +44,6 @@ def train_model(
         train_loader (DataLoader): train_loader
         val_loader (DataLoader): val_loader
         lr (float, optional): learning rate. Defaults to 1e-2.
-        batch_size (int, optional): batch_size. Defaults to 32.
         epochs (int, optional): epochs. Defaults to 100.
         verbose (bool, optional): print loss during training. Defaults to False.
         lr_decay (float, optional): learning rate decay every lr_decay_step. Defaults to 0.1.
@@ -55,11 +53,6 @@ def train_model(
     Returns:
         dict: model, train loss, val loss, epochs model trained
     """
-
-    if isinstance(model, LSTM_Regressor):
-        lstm_model = True
-    else:
-        lstm_model = False
 
     if early_stopping:
         early_stopper = EarlyStopper()
@@ -77,18 +70,12 @@ def train_model(
 
     for epoch in range(epochs):
         model.train()
-        if lstm_model:
-            hidden_state = model.init_hidden(batch_size=batch_size)
         losses = []
         for features, labels in train_loader:
             features = features.cuda()
             labels = labels.cuda()
 
-            if lstm_model:
-                hidden_state = tuple([each.data for each in hidden_state])
-                output, hidden_state = model(features, hidden_state)
-            else:
-                output = model(features)
+            output = model(features)
 
             # We use RMSE Loss
             loss = torch.sqrt(criterion(output.squeeze(), labels.float()) + 1e-8)
@@ -100,21 +87,17 @@ def train_model(
             optimizer.step()
             losses.append(loss.item())
 
-        if lstm_model:
-            val_h = model.init_hidden(batch_size)
         val_loss = []
         model.eval()
-        for features, labels in val_loader:
-            features, labels = features.cuda(), labels.cuda()
-            if lstm_model:
-                output, val_h = model(features, val_h)
-            else:
+        with torch.no_grad():
+            for features, labels in val_loader:
+                features, labels = features.cuda(), labels.cuda()
                 output = model(features)
 
-            # We use RMSE Loss
-            v_loss = torch.sqrt(criterion(output.squeeze(), labels.float()) + 1e-8)
+                # We use RMSE Loss
+                v_loss = torch.sqrt(criterion(output.squeeze(), labels.float()) + 1e-8)
 
-            val_loss.append(v_loss.item())
+                val_loss.append(v_loss.item())
 
         if verbose:
             print(

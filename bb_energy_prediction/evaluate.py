@@ -14,7 +14,6 @@ from .embedder import encode
 def evaluate(
     model: Union[LSTM_Regressor, Simple_Regressor],
     val_loader: DataLoader,
-    batch_size: int,
 ) -> dict[str, np.ndarray]:
     """evaluate model on val data
 
@@ -29,18 +28,9 @@ def evaluate(
     preds = []
     true_energies = []
 
-    if isinstance(model, LSTM_Regressor):
-        lstm_model = True
-        hidden_state = model.init_hidden(batch_size=batch_size)
-    else:
-        lstm_model = False
-
     for features, labels in val_loader:
         features, labels = features.cuda(), labels.cuda()
-        if lstm_model:
-            output, hidden_state = model(features, hidden_state)
-        else:
-            output = model(features)
+        output = model(features)
 
         preds.append(output.tolist())
         true_energies.append(labels.tolist())
@@ -83,20 +73,23 @@ def predict(
 
     if isinstance(model, LSTM_Regressor):
         preds = torch.tensor([]).cuda()
-        for i in range(0, len(encoded_bbs), batch_size):
-            batch_bbs = encoded_bbs[i : (i + batch_size)]
-            batch_bbs = list(map(lambda x: torch.tensor(x).cuda(), batch_bbs))
-            padded_seq = pad_sequence(batch_bbs, batch_first=True, padding_value=0)
-            hidden_state = model.init_hidden(len(batch_bbs))
-            batch_preds, _ = model(padded_seq, hidden_state)
-            preds = torch.cat([preds, batch_preds])
+        model.eval()
+        with torch.no_grad():
+            for i in range(0, len(encoded_bbs), batch_size):
+                batch_bbs = encoded_bbs[i : (i + batch_size)]
+                batch_bbs = list(map(lambda x: torch.tensor(x).cuda(), batch_bbs))
+                padded_seq = pad_sequence(batch_bbs, batch_first=True, padding_value=0)
+                batch_preds = model(padded_seq)
+                preds = torch.cat([preds, batch_preds])
     else:
         encoded_bbs = np.array(
             [np.mean(bb, axis=0, dtype=np.float32) for bb in encoded_bbs]
         )
         encoded_bbs = torch.tensor(encoded_bbs).cuda()
-        preds = model(encoded_bbs).flatten()
+        model.eval()
+        with torch.no_grad():
+            preds = model(encoded_bbs).flatten()
 
-    preds = np.array([pred.cpu().detach().numpy() for pred in preds])
+    preds = np.array([pred.cpu().numpy() for pred in preds])
 
     return preds
