@@ -18,7 +18,7 @@ from . import dataset, embedder
 EncTypes = Literal["palmtree", "vocab"]
 
 
-def create_data_df(data_path: str) -> pd.DataFrame:
+def create_data_df(data_path: str, no_duplicates: bool = False) -> pd.DataFrame:
     """Create data based on custom dataset and save it in data path"""
 
     energy_data_dir = os.getenv("ENERGY_DATASET_PATH")
@@ -30,9 +30,19 @@ def create_data_df(data_path: str) -> pd.DataFrame:
             f"{energy_data_dir}/{file}/breaker_code.txt",
             f"{energy_data_dir}/{file}/breaker_final_energy.txt",
         )
-        file_df = preprocess_bb_df(file_df)
+
         file_df["program_name"] = file.rsplit("_results", 1)[0]
         data_df = pd.concat([data_df, file_df], ignore_index=True)
+
+    if no_duplicates:
+        max_instructions = 25
+        data_df = (
+            data_df.groupby(data_df.bb.map(tuple))["energy"].median().reset_index()
+        )
+        data_df.bb = data_df.bb.map(list)
+    else:
+        max_instructions = 20
+    data_df = preprocess_bb_df(data_df, max_instructions=max_instructions)
 
     data_df["bb_embeddings"] = data_df.bb.apply(lambda x: embedder.encode(x))
     data_df.to_pickle(data_path)
@@ -131,7 +141,11 @@ def preprocess_bb_df(
 ) -> pd.DataFrame:
     if "bb_name" in df.columns:
         clean_df = df.drop(columns=["bb_name"])
+    else:
+        clean_df = df.copy()
 
+    # remove empty basic blocks
+    clean_df = clean_df[clean_df.bb.map(len) > 0]
     # cut all instructions above max_instructions for each bb
     clean_df["bb"] = clean_df.bb.apply(lambda x: x[:max_instructions])
     # remove address constants
