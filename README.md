@@ -68,7 +68,7 @@ git clone https://github.com/jimbou/energy_dataset.git
 
 * Create a .env file following the .env.example
 
-* Read the [demo notebook](https://github.com/)
+* Read the [demo notebook](https://github.com/Thodorissio/basic-block-energy-prediction/blob/main/demo.ipynb)
 
 # Documentation
 documentation is available [here](https://thodorissio.github.io/code-energy-prediction/)
