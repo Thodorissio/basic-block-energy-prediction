@@ -1,0 +1,12 @@
+{
+    "regressor_params": {
+        "kernel": "rbf",
+        "C": 6.9,
+        "gamma": 0.25
+    },
+    "pipe_params": {
+        "normalization": true,
+        "scaling": false,
+        "tfidf": true
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "regressor_params": {
+        "learning_rate": 0.24,
+        "max_leaf_nodes": 20,
+        "l2_regularization": 8.8
+    },
+    "pipe_params": {
+        "normalization": false,
+        "scaling": true,
+        "tfidf": true,
+        "requires_dense": true
+    },
+    "test_programs": [
+        "faa",
+        "quicksort",
+        "declare"
+    ]
+}

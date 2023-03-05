@@ -1,0 +1,12 @@
+{
+    "pipe_params": {
+        "normalization": true,
+        "scaling": true,
+        "tfidf": true
+    },
+    "test_programs": [
+        "faa",
+        "quicksort",
+        "declare"
+    ]
+}

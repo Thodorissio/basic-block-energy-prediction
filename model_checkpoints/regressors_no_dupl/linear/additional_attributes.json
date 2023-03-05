@@ -1,0 +1,7 @@
+{
+    "pipe_params": {
+        "normalization": false,
+        "scaling": false,
+        "tfidf": true
+    }
+}

@@ -1,0 +1,13 @@
+{
+    "regressor_params": {
+        "learning_rate": 0.035,
+        "max_leaf_nodes": 11,
+        "l2_regularization": 2.75
+    },
+    "pipe_params": {
+        "normalization": false,
+        "scaling": false,
+        "tfidf": false,
+        "requires_dense": true
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "regressor_params": {
+        "alpha": 3.69,
+        "l1_ratio": 0.89,
+        "penalty": "l2"
+    },
+    "pipe_params": {
+        "normalization": false,
+        "scaling": true,
+        "tfidf": false
+    }
+}

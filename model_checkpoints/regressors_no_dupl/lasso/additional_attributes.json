@@ -1,0 +1,10 @@
+{
+    "regressor_params": {
+        "alpha": 0.05
+    },
+    "pipe_params": {
+        "normalization": false,
+        "scaling": true,
+        "tfidf": false
+    }
+}
