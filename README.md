@@ -21,7 +21,7 @@ conda activate energy-prediction
 pip install .
 ```
 
-* Create a txt containg the basic blocks, for which the energy consumption measurements are desired. The txt should use the example formate:
+* Create a txt containg the basic blocks, for which the energy consumption measurements are desired. The txt should use the example format:
 ```
 @bb_0
 cmpw (%r12) %bp
