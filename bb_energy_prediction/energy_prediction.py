@@ -58,7 +58,7 @@ if __name__ == "__main__":
     }
 
     if results_save_dir:
-        with open(results_save_dir, "w") as f:
-            json.dump(res_dict, f, indent=4)
+        with open(results_save_dir, "w", encoding="utf-8") as f:
+            json.dump(res_dict, f, indent=4, ensure_ascii=False)
     else:
         print(res_dict)
